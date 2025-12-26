@@ -1,0 +1,1467 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="MOSS-transcribe-diarize: end-to-end transcription + speaker diarization with timestamps and speaker labels." />
+  <title>MOSS-transcribe-diarize | Speech Transcription & Diarization</title>
+
+  <style>
+    :root{
+      --bg:#ffffff;
+      --panel:#f8f9fa;
+      --panel2:#f1f3f5;
+      --text:#1a1a2e;
+      --muted:#64748b;
+      --brand:#4f46e5;
+      --brand2:#0ea5e9;
+      --border:rgba(0,0,0,.10);
+      --shadow: 0 18px 50px rgba(0,0,0,.12);
+      --radius: 18px;
+      --max: 1080px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      background: #ffffff;
+      line-height:1.55;
+    }
+
+    a{color:inherit; text-decoration:none}
+    a:hover{opacity:.92}
+    .wrap{max-width:var(--max); margin:0 auto; padding:0 20px}
+
+    /* Top nav */
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:20;
+      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,.85);
+      border-bottom:1px solid var(--border);
+    }
+    .nav{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding:14px 0;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+    .logo{
+      width:34px; height:34px; border-radius:10px;
+      object-fit: contain;
+      box-shadow: 0 10px 25px rgba(79, 70, 229,.18);
+      border:1px solid rgba(79, 70, 229,.18);
+      background: #ffffff;
+    }
+    .navlinks{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      color:var(--muted);
+      font-size:14px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .navlinks a{padding:8px 10px; border-radius:10px}
+    .navlinks a:hover{background: rgba(0,0,0,.06); color: var(--text)}
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(0,0,0,.12);
+      background: rgba(0,0,0,.03);
+      color:var(--text);
+      font-size:14px;
+    }
+    .pill.primary{
+      border-color: rgba(79, 70, 229,.35);
+      background: rgba(79, 70, 229,.12);
+    }
+
+    /* Hero */
+    .hero{
+      padding:56px 0 18px;
+      background:
+        radial-gradient(60% 60% at 50% 20%, rgba(79, 70, 229, 0.18), transparent 60%),
+        radial-gradient(40% 40% at 80% 10%, rgba(14, 165, 233, 0.16), transparent 60%),
+        radial-gradient(35% 35% at 20% 5%,  rgba(236, 72, 153, 0.14), transparent 60%),
+        #ffffff;
+    }
+    .heroGrid{
+      display:grid;
+      grid-template-columns: 1.35fr .65fr;
+      gap:22px;
+      align-items:start;
+    }
+    @media (max-width: 900px){
+      .heroGrid{grid-template-columns:1fr; gap:16px}
+    }
+    h1{
+      margin:0 0 14px;
+      font-size: 38px;
+      line-height:1.12;
+      letter-spacing:-.6px;
+    }
+    .sub{
+      margin:0 0 20px;
+      color: var(--muted);
+      font-size:16px;
+      max-width: 70ch;
+    }
+    .ctaRow{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin: 10px 0 0;
+    }
+    .panel{
+      background: rgba(255,255,255,.95);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .heroCard{
+      padding:16px;
+    }
+    .kpis{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .kpi{
+      padding:12px;
+      border-radius: 14px;
+      border:1px solid rgba(0,0,0,.08);
+      background: rgba(255,255,255,.8);
+    }
+    .kpi .k{font-size:12px; color:var(--muted)}
+    .kpi .v{font-size:14px; margin-top:6px}
+
+    /* Sections */
+    section{padding: 22px 0}
+    .sectionTitle{
+      margin: 0 0 10px;
+      font-size: 22px;
+      letter-spacing:-.2px;
+    }
+    .sectionHint{
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* Feature cards */
+    .grid3{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:14px;
+    }
+    @media (max-width: 900px){ .grid3{grid-template-columns:1fr} }
+    .card{
+      padding:16px;
+      border-radius: var(--radius);
+      border:1px solid rgba(0,0,0,.08);
+      background: rgba(255,255,255,.8);
+    }
+    .card h3{
+      margin: 0 0 8px;
+      font-size: 16px;
+      letter-spacing:-.2px;
+    }
+    .card p{
+      margin:0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* Demo */
+    .demoToolbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .seg{
+      display:inline-flex;
+      border:1px solid rgba(0,0,0,.12);
+      background: rgba(0,0,0,.03);
+      border-radius: 999px;
+      padding: 4px;
+      gap: 4px;
+    }
+    .seg button{
+      appearance:none;
+      border:0;
+      background: transparent;
+      color: var(--muted);
+      padding: 8px 12px;
+      border-radius: 999px;
+      cursor:pointer;
+      font-size: 13px;
+    }
+    .seg button.active{
+      color: var(--text);
+      background: rgba(79, 70, 229,.12);
+      border:1px solid rgba(79, 70, 229,.2);
+    }
+
+    .demoGrid {
+      column-count: 2;
+      column-gap: 14px;
+    }
+    @media (max-width: 900px){ .demoGrid{column-count: 1;} }
+    
+    .videoCard {
+      padding: 14px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(0,0,0,.08);
+      background: rgba(255,255,255,.8);
+      margin-bottom: 14px; /* 底部间距 */
+      break-inside: avoid; /* 防止卡片被拆分到两列 */
+    }
+    .videoCard .meta{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+      margin-bottom:10px;
+    }
+    .tag{
+      font-size:12px;
+      color: var(--muted);
+      border:1px solid rgba(0,0,0,.1);
+      background: rgba(0,0,0,.03);
+      padding:4px 10px;
+      border-radius:999px;
+      white-space:nowrap;
+    }
+    .videoCard h4{
+      margin:0;
+      font-size:14px;
+      letter-spacing:-.1px;
+    }
+    video{
+      width:100%;
+      border-radius: 14px;
+      border:1px solid rgba(0,0,0,.1);
+      background: rgba(0,0,0,.05);
+    }
+    /* Subtitle styles - 滚动歌词效果 */
+    .videoCard {
+      position: relative;
+    }
+    .subtitle-container {
+      position: relative;
+      width: 100%;
+      height: 140px; /* 稍微增加高度让排版更舒服 */
+      margin-top: 12px;
+      background: #ffffff;
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.02);
+    }
+
+    .subtitle-list {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      transform: translateY(50px);
+      transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+      will-change: transform;
+      padding: 10px 0;
+    }
+
+    .subtitle-line {
+      min-height: 44px; /* 保持最小高度 */
+      height: auto;     /* 允许自动撑开 */
+      display: flex;
+      align-items: flex-start; /* 顶部对齐 */
+      padding: 10px 24px;      /* 增加上下内边距 */
+      gap: 16px; /* 元素间距 */
+      color: var(--muted);
+      font-size: 14px;
+      opacity: 0.5;
+      transition: all 0.3s ease;
+      border-left: 3px solid transparent; /* 左侧高亮条预留 */
+    }
+
+    /* 当前播放行高亮 */
+    .subtitle-line.active {
+      background: rgba(248, 250, 252, 0.8); /* 极淡的背景 */
+      opacity: 1;
+      border-left-color: var(--brand); /* 左侧指示条 */
+      transform: scale(1);
+    }
+
+    .subtitle-line .time {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      color: #94a3b8;
+      min-width: 95px; /* 固定宽度对齐 */
+      letter-spacing: -0.5px;
+      margin-top: 4px; /* 对齐文本 */
+    }
+    
+    .subtitle-line.active .time {
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .subtitle-line .speaker {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 6px;
+      background: #f1f5f9; /* 默认灰色背景 */
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 600;
+      min-width: 40px;
+      margin-top: 1px; /* 对齐文本 */
+    }
+
+    .subtitle-line.active .speaker {
+      background: rgba(79, 70, 229, 0.1); /* 激活时用品牌色浅背景 */
+      color: var(--brand);
+    }
+
+    .subtitle-line .text {
+      flex: 1;
+      font-weight: 400;
+      color: var(--muted);
+      white-space: normal; /* 允许换行 */
+      line-height: 1.6;
+      word-break: break-word;
+    }
+    
+    .subtitle-line.active .text {
+      color: var(--text);
+      font-weight: 500;
+      font-size: 15px;
+    }
+    .note{
+      margin-top:10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* Footer */
+    footer{
+      padding: 26px 0 38px;
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid var(--border);
+      margin-top: 26px;
+    }
+
+    /* Utilities */
+    .muted{color:var(--muted)}
+    .spacer{height:6px}
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <div class="nav">
+        <div class="brand">
+          <img class="logo" src="logo.png" alt="Logo" />
+          <div>MOSS-transcribe-diarize</div>
+        </div>
+
+        <nav class="navlinks" aria-label="Primary">
+          <a href="#features">Features</a>
+          <a href="#demo">Demo Videos</a>
+
+          <!-- 替换成你的真实链接 -->
+          <a class="pill primary" href="https://example.com/online-demo" target="_blank" rel="noreferrer">Online Demo</a>
+          <a class="pill" href="https://example.com/technical-report.pdf" target="_blank" rel="noreferrer">Technical Report</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <section class="hero" id="top">
+        <div class="heroGrid">
+          <div>
+            <h1>MOSS Transcribe Diarize: Accurate Transcription with Speaker Diarization</h1>
+            <p class="sub">
+              MOSS-transcribe-diarize provides end-to-end speech transcription with speaker diarization.
+              Unlike brittle post-hoc stitching, it outputs timestamped segments with consistent speaker labels
+              (e.g., [S01], [S02]…) and optional acoustic events, enabling reliable meeting notes, call analytics,
+              and long-form media processing.
+            </p>
+
+            <div class="ctaRow">
+              <a class="pill primary" href="#demo">Watch Demo Videos</a>
+              <a class="pill" href="#features">See Features</a>
+              <a class="pill" href="https://example.com/online-demo" target="_blank" rel="noreferrer">Try Online Demo</a>
+            </div>
+          </div>
+
+          <aside class="panel heroCard" aria-label="At a glance">
+            <div class="kpis">
+              <div class="kpi">
+                <div class="k">Output format</div>
+                <div class="v">[Sxx] + timestamps</div>
+              </div>
+              <div class="kpi">
+                <div class="k">Use cases</div>
+                <div class="v">Meetings · Calls · Media</div>
+              </div>
+              <div class="kpi">
+                <div class="k">Modes</div>
+                <div class="v">High Throughput · Long-Context</div>
+              </div>
+              <div class="kpi">
+                <div class="k">Signals</div>
+                <div class="v">Speech + Events</div>
+              </div>
+            </div>
+
+            <div class="spacer"></div>
+            <div class="card" style="margin-top:10px;">
+              <h3 style="margin:0 0 8px;">Example Segment</h3>
+              <p style="margin:0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
+                [01:12.34-01:15.02][S01] We should ship the feature this week.<br/>
+                [01:15.06-01:18.41][S02] Agreed, but we need QA sign-off.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="features">
+        <h2 class="sectionTitle">Features</h2>
+        <p class="sectionHint">
+          Designed for robust, production-oriented transcription pipelines with diarization-first outputs.
+        </p>
+
+        <div class="grid3">
+          <div class="card">
+            <h3>Timestamped Speaker Segments</h3>
+            <p>
+              Produces structured segments with start/end timestamps and stable speaker IDs (e.g., [S01], [S02]).
+              Ideal for indexing, search, and downstream summarization.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Long-Form Stability</h3>
+            <p>
+              Handles multi-hour audio with consistent speaker tracking, minimizing speaker swaps and fragmented turns
+              common in naive diarization + ASR cascades.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Event & Overlap Markers</h3>
+            <p>
+              Optional tags for non-speech events (e.g., laughter, applause) and overlap/interruptions, improving
+              readability for real conversational audio.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Batch and Streaming</h3>
+            <p>
+              Supports offline processing for datasets as well as low-latency streaming for live meetings and calls,
+              with incremental transcript updates.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Multilingual by Default</h3>
+            <p>
+              Auto-detects language per segment and preserves speaker tags in a consistent schema across languages,
+              simplifying mixed-language scenarios.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Tooling-Friendly Output</h3>
+            <p>
+              Export JSON/JSONL/SRT/VTT-ready structures. Fits cleanly into analytics, annotation, and retrieval
+              workflows without custom parsing.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="benchmark">
+        <h2 class="sectionTitle">Benchmark Performance</h2>
+        <p class="sectionHint">
+          Achieving state-of-the-art accuracy on challenging movie datasets compared to leading commercial models.
+        </p>
+        
+        <style>
+          /* Benchmark Chart Styles - Fixed */
+          .benchmark-chart { width: 100%; max-width: 900px; margin: 0 auto; font-family: ui-sans-serif, system-ui; color: var(--text); }
+          .chart-legend { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; margin-bottom: 32px; font-size: 12px; color: var(--muted); }
+          .legend-item { display: flex; align-items: center; gap: 6px; }
+          .legend-color { width: 12px; height: 12px; border-radius: 3px; }
+          
+          .chart-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; align-items: start; }
+          
+          .metric-group { width: 100%; }
+          .metric-title { text-align: center; margin-top: 12px; font-weight: 600; font-size: 14px; color: var(--text); }
+          .metric-sub { display: block; font-size: 11px; color: var(--muted); font-weight: 400; text-align: center; }
+          
+          .bars-area { 
+            display: flex; 
+            align-items: flex-end; /* 底部对齐 */
+            gap: 6px; 
+            height: 200px; /* 固定高度 */
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1px;
+            position: relative;
+          }
+          /* 网格线背景 */
+          .bars-area::before {
+            content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+            background-size: 100% 20%; /* 5条线 */
+            opacity: 0.3; pointer-events: none; z-index: 0;
+          }
+
+          .bar-col {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* 内容靠下 */
+            align-items: center;
+            position: relative;
+            z-index: 1;
+          }
+          
+          .bar {
+            width: 100%;
+            border-radius: 3px 3px 0 0;
+            position: relative;
+            min-width: 4px;
+            transition: opacity 0.2s;
+          }
+          .bar:hover { opacity: 0.9; }
+
+          /* 数值标签 */
+          .val {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--muted);
+            margin-bottom: 4px;
+            opacity: 1; /* 始终显示 */
+            white-space: nowrap;
+            pointer-events: none;
+          }
+          
+          /* 交互：高亮时加粗变色 */
+          .bar.highlight .val { color: var(--brand); font-weight: 700; }
+
+          @media (max-width: 768px) { 
+            .chart-grid { grid-template-columns: 1fr; gap: 48px; } 
+            .bars-area { height: 160px; }
+          }
+        </style>
+
+        <div class="panel" style="padding: 32px 24px; background: white;">
+          <div class="benchmark-chart">
+            
+            <!-- Legend -->
+            <div class="chart-legend">
+              <div class="legend-item"><div class="legend-color" style="background:#e2e8f0"></div>Doubao</div>
+              <div class="legend-item"><div class="legend-color" style="background:#cbd5e1"></div>ElevenLabs</div>
+              <div class="legend-item"><div class="legend-color" style="background:#94a3b8"></div>GPT-4o</div>
+              <div class="legend-item"><div class="legend-color" style="background:#64748b"></div>Gemini 2.5 Pro</div>
+              <div class="legend-item"><div class="legend-color" style="background:#475569"></div>Gemini 3 Pro</div>
+              <div class="legend-item"><div class="legend-color" style="background:#4f46e5"></div><strong>TrinityASR</strong></div>
+            </div>
+            
+            <div class="chart-grid">
+              
+              <!-- Metric 1: CER (Max ~31) -->
+              <div class="metric-group">
+                <div class="bars-area">
+                  <!-- Doubao 9.94 / 31 = 32% -->
+                  <div class="bar-col"><div class="bar" style="height:32%; background:#e2e8f0"><span class="val">9.94</span></div></div>
+                  <!-- ElevenLabs 11.49 / 31 = 37% -->
+                  <div class="bar-col"><div class="bar" style="height:37%; background:#cbd5e1"><span class="val">11.49</span></div></div>
+                  <!-- GPT-4o 14.37 / 31 = 46% -->
+                  <div class="bar-col"><div class="bar" style="height:46%; background:#94a3b8"><span class="val">14.37</span></div></div>
+                  <!-- Gemini 2.5 15.46 / 31 = 50% -->
+                  <div class="bar-col"><div class="bar" style="height:50%; background:#64748b"><span class="val">15.46</span></div></div>
+                  <!-- Gemini 3 8.62 / 31 = 28% -->
+                  <div class="bar-col"><div class="bar" style="height:28%; background:#475569"><span class="val">8.62</span></div></div>
+                  <!-- Trinity 7.50 / 31 = 24% -->
+                  <div class="bar-col"><div class="bar highlight" style="height:24%; background:#4f46e5"><span class="val">7.50</span></div></div>
+                </div>
+                <div class="metric-title">CER<span class="metric-sub">(Character Error Rate)</span></div>
+              </div>
+
+              <!-- Metric 2: cpCER (Max ~31) -->
+              <div class="metric-group">
+                <div class="bars-area">
+                  <!-- Doubao 30.88 / 31 = 99.6% -->
+                  <div class="bar-col"><div class="bar" style="height:99%; background:#e2e8f0"><span class="val">30.88</span></div></div>
+                  <!-- ElevenLabs 17.85 / 31 = 57.5% -->
+                  <div class="bar-col"><div class="bar" style="height:57%; background:#cbd5e1"><span class="val">17.85</span></div></div>
+                  <!-- GPT-4o 23.67 / 31 = 76% -->
+                  <div class="bar-col"><div class="bar" style="height:76%; background:#94a3b8"><span class="val">23.67</span></div></div>
+                  <!-- Gemini 2.5 24.15 / 31 = 78% -->
+                  <div class="bar-col"><div class="bar" style="height:78%; background:#64748b"><span class="val">24.15</span></div></div>
+                  <!-- Gemini 3 14.73 / 31 = 47.5% -->
+                  <div class="bar-col"><div class="bar" style="height:47%; background:#475569"><span class="val">14.73</span></div></div>
+                  <!-- Trinity 13.36 / 31 = 43% -->
+                  <div class="bar-col"><div class="bar highlight" style="height:43%; background:#4f46e5"><span class="val">13.36</span></div></div>
+                </div>
+                <div class="metric-title">cpCER<span class="metric-sub">(Concatenated Permutation)</span></div>
+              </div>
+
+              <!-- Metric 3: Delta cp (Max ~31) -->
+              <div class="metric-group">
+                <div class="bars-area">
+                  <!-- Doubao 20.94 / 31 = 67.5% -->
+                  <div class="bar-col"><div class="bar" style="height:67%; background:#e2e8f0"><span class="val">20.94</span></div></div>
+                  <!-- ElevenLabs 6.37 / 31 = 20.5% -->
+                  <div class="bar-col"><div class="bar" style="height:20%; background:#cbd5e1"><span class="val">6.37</span></div></div>
+                  <!-- GPT-4o 9.31 / 31 = 30% -->
+                  <div class="bar-col"><div class="bar" style="height:30%; background:#94a3b8"><span class="val">9.31</span></div></div>
+                  <!-- Gemini 2.5 8.69 / 31 = 28% -->
+                  <div class="bar-col"><div class="bar" style="height:28%; background:#64748b"><span class="val">8.69</span></div></div>
+                  <!-- Gemini 3 6.11 / 31 = 20% -->
+                  <div class="bar-col"><div class="bar" style="height:20%; background:#475569"><span class="val">6.11</span></div></div>
+                  <!-- Trinity 5.86 / 31 = 19% -->
+                  <div class="bar-col"><div class="bar highlight" style="height:19%; background:#4f46e5"><span class="val">5.86</span></div></div>
+                </div>
+                <div class="metric-title">&Delta;cp<span class="metric-sub">(Delta cp)</span></div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="demo">
+        <div class="demoToolbar">
+          <div>
+            <h2 class="sectionTitle" style="margin-bottom:4px;">Demo Videos</h2>
+            <div class="sectionHint" style="margin:0;">
+              You can filter by language/category.
+            </div>
+          </div>
+
+          <div class="seg" role="tablist" aria-label="Language toggle">
+            <button class="active" data-lang-mode="zh" role="tab" aria-selected="true">中文</button>
+            <button data-lang-mode="en" role="tab" aria-selected="false">English</button>
+          </div>
+        </div>
+
+        <div class="demoGrid" id="demoGrid">
+          <!-- 下面 video src 用占位符；替换成你自己的 mp4/webm 路径 -->
+          <article class="videoCard" data-lang="zh">
+            <div class="meta">
+              <h4>Zootopia: Flash the Sloth</h4>
+              <span class="tag">English · Animation</span>
+            </div>
+            <video controls preload="metadata" data-video-id="video2">
+              <source src="《疯狂动物城》看一次笑一次的经典镜头，传说中树懒的“闪电”办公模式_p1.mp4" type="video/mp4" />
+            </video>
+            <div class="subtitle-container">
+              <div class="subtitle-overlay" id="subtitle-video2"></div>
+            </div>
+            <div class="note">Handles extreme speech rate variations (very slow vs. fast) and turn-taking interruptions.</div>
+          </article>
+
+          <article class="videoCard" data-lang="en">
+            <div class="meta">
+              <h4>名场面：华强买瓜</h4>
+              <span class="tag">中文 · Drama</span>
+            </div>
+            <video controls preload="metadata" data-video-id="video1">
+              <source src="买瓜.mp4" type="video/mp4" />
+            </video>
+            <div class="subtitle-container">
+              <div class="subtitle-overlay" id="subtitle-video1"></div>
+            </div>
+            <div class="note">Robust recognition of regional accents and informal slang in noisy environments.</div>
+          </article>
+
+          <article class="videoCard" data-lang="en">
+            <div class="meta">
+              <h4>Dramatic Scene: Emotional Conflict</h4>
+              <span class="tag">Japanese · Emotion</span>
+            </div>
+            <video controls preload="metadata" data-video-id="video3">
+              <source src="japen.mp4" type="video/mp4" />
+            </video>
+            <div class="subtitle-container">
+              <div class="subtitle-overlay" id="subtitle-video3"></div>
+            </div>
+            <div class="note">Captures high-dynamic emotional speech (shouting, crying) with accurate segmentation.</div>
+          </article>
+
+          <article class="videoCard" data-lang="zh">
+            <div class="meta">
+              <h4>小时代：发烂发臭</h4>
+              <span class="tag">中文 · Multi-party</span>
+            </div>
+            <video controls preload="metadata" data-video-id="video4">
+              <source src="小时代名场面  _  “发烂！发臭！！”_p1_97.mp4" type="video/mp4" />
+            </video>
+            <div class="subtitle-container">
+              <div class="subtitle-overlay" id="subtitle-video4"></div>
+            </div>
+            <div class="note">Excels at tracking rapid speaker changes and separating overlapping speech in heated arguments.</div>
+          </article>
+
+          <article class="videoCard" data-lang="zh">
+            <div class="meta">
+              <h4>练习生自我介绍</h4>
+              <span class="tag">中文 · Solo</span>
+            </div>
+            <video controls preload="metadata" data-video-id="video5">
+              <source src="【4K顶级画质60FPS】蔡徐坤《只因你太美》原版完整版现场！一晃眼6年过去了_p1.mp4" type="video/mp4" />
+            </video>
+            <div class="subtitle-container">
+              <div class="subtitle-overlay" id="subtitle-video5"></div>
+            </div>
+            <div class="note">Distinguishes speech from background music and handles rhythmic spoken content (Rap).</div>
+          </article>
+
+          <article class="videoCard" data-lang="zh">
+            <div class="meta">
+              <h4>名场面：二仙桥</h4>
+              <span class="tag">中文 · 搞笑</span>
+            </div>
+            <video controls preload="metadata" data-video-id="video6">
+              <source src="二仙桥传说起源：二位老仙让成都二仙桥火爆全国_p1.mp4" type="video/mp4" />
+            </video>
+            <div class="subtitle-container">
+              <div class="subtitle-overlay" id="subtitle-video6"></div>
+            </div>
+            <div class="note">精准捕捉逻辑不通的对话，展现对非结构化、跳跃性对话的处理能力。</div>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      <div class="wrap">
+        <div style="display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+          <div>© <span id="year"></span> OpenMOSS Team (placeholder)</div>
+          <div class="muted">
+            <a href="#top">Back to top</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    // Smooth-ish anchor behavior (native is fine; this is minimal)
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', (e) => {
+        const id = a.getAttribute('href');
+        const el = document.querySelector(id);
+        if (!el) return;
+        e.preventDefault();
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    // Demo filter
+    const buttons = Array.from(document.querySelectorAll('.seg button'));
+    const cards = Array.from(document.querySelectorAll('.videoCard'));
+
+    // Multilingual Data
+    const videoMetadata = {
+      video1: {
+        zh: { title: "名场面：华强买瓜", tag: "中文 · 剧情", note: "在嘈杂环境（菜市场）中识别方言口音与俚语，展现极强的鲁棒性。" },
+        en: { title: "Huaqiang Buying Melon", tag: "Chinese · Drama", note: "Robust recognition of regional accents and informal slang in noisy environments." }
+      },
+      video2: {
+        zh: { title: "疯狂动物城：树懒闪电", tag: "英语 · 动画", note: "处理极端语速变化（极慢语速）与快速轮替打断的能力。" },
+        en: { title: "Zootopia: Flash the Sloth", tag: "English · Animation", note: "Handles extreme speech rate variations (very slow vs. fast) and turn-taking interruptions." }
+      },
+      video3: {
+        zh: { title: "BanG Dream! It's MyGO!!!!!", tag: "日语 · 情感", note: "精准捕捉高动态情感语音（喊叫、哭腔）并进行准确分割。" },
+        en: { title: "BanG Dream! It's MyGO!!!!!", tag: "Japanese · Emotion", note: "Captures high-dynamic emotional speech (shouting, crying) with accurate segmentation." }
+      },
+      video4: {
+        zh: { title: "小时代：群像撕逼", tag: "中文 · 多人", note: "在激烈争吵中出色地追踪快速说话人切换并分离重叠语音。" },
+        en: { title: "Tiny Times: Argument", tag: "Chinese · Multi-party", note: "Excels at tracking rapid speaker changes and separating overlapping speech in heated arguments." }
+      },
+      video5: {
+        zh: { title: "个人练习生：自我介绍", tag: "中文 · 表演", note: "区分语音与背景音乐，并能处理有节奏的说唱内容。" },
+        en: { title: "Trainee Introduction", tag: "Chinese · Performance", note: "Distinguishes speech from background music and handles rhythmic spoken content (Rap)." }
+      },
+      video6: {
+        zh: { title: "名场面：二仙桥", tag: "中文 · 搞笑", note: "精准捕捉逻辑不通的对话，展现对非结构化、跳跃性对话的处理能力。" },
+        en: { title: "Meme: Er Xian Qiao", tag: "Chinese · Comedy", note: "Accurately captures unstructured, non-logical dialogue flow and rapid turn-taking." }
+      }
+    };
+
+    function setActive(btn){
+      buttons.forEach(b => {
+        b.classList.toggle('active', b === btn);
+        b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+      });
+    }
+
+    function updateLanguage(lang) {
+      cards.forEach(c => {
+        const vid = c.querySelector('video').getAttribute('data-video-id');
+        const meta = videoMetadata[vid];
+        if (meta && meta[lang]) {
+          c.querySelector('h4').textContent = meta[lang].title;
+          c.querySelector('.tag').textContent = meta[lang].tag;
+          c.querySelector('.note').textContent = meta[lang].note;
+        }
+      });
+    }
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lang = btn.getAttribute('data-lang-mode');
+        setActive(btn);
+        updateLanguage(lang);
+      });
+    });
+
+    // Initialize with Chinese
+    updateLanguage('zh');
+
+    // Footer year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Subtitle functionality
+    // 解析时间格式 MM:SS.mmm 转换为秒数
+    function parseTime(timeStr) {
+      const parts = timeStr.split(':');
+      const minutes = parseInt(parts[0], 10);
+      const seconds = parseFloat(parts[1]);
+      return minutes * 60 + seconds;
+    }
+
+    // 解析字幕行："[01:12.34-01:15.02][S01] We should ship the feature this week."
+    function parseSubtitleLine(line) {
+      const match = line.match(/\[(\d+:\d+\.\d+)-(\d+:\d+\.\d+)\]\[([^\]]+)\]\s*(.+)/);
+      if (!match) return null;
+      
+      return {
+        start: parseTime(match[1]),
+        end: parseTime(match[2]),
+        timeDisplay: `${match[1]}-${match[2]}`,
+        speaker: match[3],
+        text: match[4].trim()
+      };
+    }
+
+    // 字幕数据 - 为每个视频配置字幕
+    // 格式：[MM:SS.mmm-MM:SS.mmm][SXX] 字幕文本
+    const subtitleData = {
+      video1: [
+        "[00:01.08-00:02.96][S01] 哥们儿，你这瓜多少钱一斤呐",
+        "[00:02.96-00:03.88][S02] 两块钱一斤",
+        "[00:04.36-00:05.00][S01] 我操",
+        "[00:05.72-00:08.16][S01] 这瓜皮子是金子做的还是瓜粒子是金子做的",
+        "[00:09.76-00:11.36][S02] 你瞧这现在哪有瓜呀",
+        "[00:11.36-00:12.72][S02] 这都是大棚的瓜",
+        "[00:13.40-00:15.08][S02] 你嫌贵我还嫌贵呢",
+        "[00:15.44-00:16.28][S01] 给我挑一个",
+        "[00:16.28-00:22.32][S02] 这个怎么样",
+        "[00:23.16-00:24.08][S01] 这瓜保熟吗",
+        "[00:25.20-00:26.60][S02] 我开水果摊的能卖给你生瓜蛋子",
+        "[00:29.32-00:30.96][S01] 我问你这瓜保熟吗",
+        "[00:32.84-00:37.28][S02] 你是故意找茬是不是",
+        "[00:38.96-00:39.92][S02] 你要不要吧",
+        "[00:41.56-00:43.12][S02] 你是故意找茬是不是",
+        "[00:43.12-00:44.20][S02] 你要不要吧",
+        "[00:44.76-00:46.40][S01] 你这瓜要熟我肯定要啊",
+        "[00:48.64-00:50.04][S01] 那它要是不熟怎么办啊",
+        "[00:50.40-00:52.16][S02] 要是不熟我自己吃了它",
+        "[00:52.16-00:52.84][S02] 满意了吧",
+        "[00:52.84-00:56.84][S02] 十五斤三十块",
+        "[00:57.96-00:59.20][S01] 你这哪够十五斤呐你这秤有问题啊",
+        "[01:01.40-01:03.16][S02] 你他妈故意找茬是不是",
+        "[01:04.72-01:05.80][S02] 你要不要吧",
+        "[01:06.36-01:07.12][S02] 你要不要",
+        "[01:07.12-01:10.48][S01] 吸点石",
+        "[01:11.28-01:12.16][S01] 另外你说的",
+        "[01:13.24-01:15.20][S01] 这瓜要是生的你自己吞进去啊",
+        "[01:17.28-01:18.64][S01] 你他妈骗我瓜是吧"
+      ],
+      video2: [
+        "[00:00.00-00:00.64][S01] What?",
+        "[00:00.64-00:02.24][S02] Actually, I just remembered I have a pal at the DMV.",
+        "[00:06.40-00:07.36][S02] Flash is the fastest guy in there. You need something done, he's on it.",
+        "[00:10.56-00:14.40][S01] I hope so. We are really fighting the clock, and every minute counts.",
+        "[00:14.40-00:17.60][S01] Wait. They're all sloths?",
+        "[00:17.60-00:46.40][S01] You said this was going to be quick.",
+        "[00:48.32-00:51.68][S02] What? Are you saying that because he's a sloth, he can't be fast?",
+        "[00:51.68-00:54.08][S02] I thought in Zootopia, anyone could be anything.",
+        "[00:54.08-00:57.28][S02] Flash, Flash, 100-yard dash. Buddy, it's nice to see you.",
+        "[00:57.28-00:58.56][S03] Nice to see you...",
+        "[01:02.08-01:04.00][S03] ...too.",
+        "[01:04.96-01:09.12][S02] Hey, Flash, I'd love you to meet my friend. Uh, darlin', I've forgotten your name.",
+        "[01:09.12-01:12.00][S01] Hmm. Officer Judy Hopps, CPD. How are you?",
+        "[01:12.00-01:12.96][S03] I am... doing... just...",
+        "[01:16.96-01:18.24][S01] Fine?",
+        "[01:18.72-01:23.84][S03] As well... as... I can... be.",
+        "[01:23.84-01:24.32][S03] What...",
+        "[01:24.96-01:25.60][S02] Hang in there.",
+        "[01:25.60-01:27.84][S03] ...can I... do?",
+        "[01:27.84-01:29.12][S01] Well, I was hoping you could run a plate.",
+        "[01:29.12-01:30.08][S03] For you...",
+        "[01:30.08-01:31.52][S01] Well, I was hoping you could...",
+        "[01:31.52-01:32.16][S03] ...today.",
+        "[01:32.16-01:35.20][S01] Well, I was hoping you could run a plate for us. We are in a really big hurry.",
+        "[01:39.84-01:41.28][S03] Sure. What's the plate?",
+        "[01:45.12-01:46.40][S01] 29THD...",
+        "[01:46.40-01:47.04][S03] Number.",
+        "[01:47.04-01:48.48][S01] 29THD03.",
+        "[01:50.72-01:59.68][S03] 2...",
+        "[02:00.32-02:03.04][S03] 9...",
+        "[02:03.68-02:04.48][S01] THD03.",
+        "[02:05.60-02:07.52][S03] T...",
+        "[02:08.16-02:09.44][S01] HD03.",
+        "[02:10.24-02:11.84][S03] H...",
+        "[02:12.64-02:14.24][S01] D03.",
+        "[02:14.24-02:18.08][S03] D...",
+        "[02:18.40-02:18.88][S01] Mm-hmm.",
+        "[02:18.88-02:19.84][S01] 03.",
+        "[02:19.84-02:22.08][S03] 0...",
+        "[02:22.72-02:23.36][S01] 3.",
+        "[02:23.36-02:26.08][S02] Hey, Flash, wanna hear a joke?",
+        "[02:27.52-02:28.16][S01] No!",
+        "[02:28.16-02:29.28][S03] Sure.",
+        "[02:29.92-02:30.72][S02] Okay. What do you call a three-humped camel?",
+        "[02:34.24-02:35.68][S03] I don't know.",
+        "[02:37.76-02:38.72][S03] What do you call a...",
+        "[02:43.20-02:44.64][S01] Three-humped camel.",
+        "[02:44.64-02:47.20][S03] Three-humped camel.",
+        "[02:47.20-02:48.48][S02] Pregnant.",
+        "[02:49.28-03:00.80][S03] Ah...",
+        "[03:01.28-03:02.40][S03] Ah...",
+        "[03:02.88-03:04.64][S01] Ah!ah!ah, yes, very funny, very funny. Can we please just focus on the task at hand?",
+        "[03:08.16-03:08.80][S03] Hey...",
+        "[03:08.80-03:09.28][S01] Wait, wait, wait.",
+        "[03:09.28-03:10.08][S03] Priscilla.",
+        "[03:10.08-03:11.04][S01] Oh, no!",
+        "[03:11.84-03:12.96][S01] Yes?",
+        "[03:13.76-03:14.88][S01] Flash?",
+        "[03:15.68-03:16.32][S03] What...",
+        "[03:16.80-03:17.76][S03] ...do...",
+        "[03:18.40-03:19.20][S01] No!",
+        "[03:19.20-03:19.68][S03] ...you call...",
+        "[03:19.68-03:21.12][S01] ...a three-humped camel?",
+        "[03:21.12-03:23.36][S01] Pregnant!!ah. Okay, great, we got it.",
+        "[03:23.36-03:24.32][S03] Three-humped...",
+        "[03:24.32-03:37.92][S03] Here.",
+        "[03:38.72-03:39.68][S01] Yes, yeah, yeah, yeah. Hurry, hurry.",
+        "[03:39.68-03:40.16][S03] You...",
+        "[03:40.16-03:41.92][S01] Thank you. 29THD03...",
+        "[03:41.92-03:42.24][S03] Go.",
+        "[03:42.24-03:45.28][S01] It's registered to Tundratown Limo Service.",
+        "[03:45.28-03:48.80][S01] A limo to Goddardton, and the limo's in Tundratown. It's in Tundratown!",
+        "[03:48.80-03:50.56][S02] Way to hustle, bud. I love ya. I owe ya.",
+        "[03:50.56-03:52.32][S01] Hurry. We gotta beat the rush hour in."
+      ],
+      video3: [
+        "[00:00.00-00:02.00][S01] これが最後の通告ですわ。",
+        "[00:02.40-00:05.50][S01] 今度こそ、私にはもう関わらないで。",
+        "[00:05.50-00:06.50][S02] あっ！",
+        "[00:12.50-00:13.50][S02] 待って！",
+        "[00:15.50-00:18.00][S02] 行かないで！違うの！",
+        "[00:18.00-00:23.50][S02] 私、本当にみんなのことが大事で、大好きで！",
+        "[00:26.00-00:28.50][S02] いやぁ！おねがい！",
+        "[00:29.00-00:31.50][S02] サキちゃんたちがいないと、私！",
+        "[00:31.50-00:32.50][S01] 放して。",
+        "[00:32.50-00:36.50][S02] どうしたら戻れるの？私にできることなら何でもするから！",
+        "[00:39.50-00:41.50][S01] どのくらいの覚悟で言ってるのですか？",
+        "[00:42.50-00:47.50][S01] ただの学生でしかないあなたに、他人の人生を抱えきれますか？",
+        "[00:48.50-00:52.00][S01] 何でもするとは、それほど重い言葉ですよ。",
+        "[00:54.00-00:56.50][S01] 出来もしないことを口にしなさい。",
+        "[00:57.00-00:59.50][S02] でも、私、本当に…",
+        "[01:01.00-01:04.50][S01] あなた、ご自分のことばかりですね。"
+      ],
+      video4: [
+        "[00:03.20-00:04.48][S01] 我也没误会什么",
+        "[00:05.12-00:06.40][S01] 有女朋友怎么了",
+        "[00:06.88-00:09.44][S01] 这年头只要没有登记领证结婚",
+        "[00:09.44-00:10.88][S01] 从法律层面来说",
+        "[00:10.88-00:12.64][S01] 每一个人都是单身男女",
+        "[00:12.96-00:14.88][S01] 感情的事我明白",
+        "[00:14.88-00:16.00][S01] 一个巴掌拍不响",
+        "[00:16.48-00:18.08][S01] 今天在场我们十几个巴掌",
+        "[00:18.08-00:19.36][S01] 来大家拍一拍",
+        "[00:19.68-00:20.80][S01] 多简单的事",
+        "[00:21.28-00:22.40][S02] 顾莉你闭嘴",
+        "[00:26.56-00:27.36][S01] 我怎么了",
+        "[00:28.16-00:29.60][S01] 我好心好意帮你",
+        "[00:29.60-00:30.40][S01] 我还错了吗",
+        "[00:30.40-00:31.20][S02] 你没错",
+        "[00:32.64-00:34.08][S02] 你永远都没错",
+        "[00:38.88-00:39.68][S02] 不对",
+        "[00:40.64-00:41.60][S02] 应该是说你自以为",
+        "[00:41.60-00:42.88][S02] 你永远都不会错",
+        "[00:48.32-00:49.92][S02] 你总是自作聪明说要帮我",
+        "[00:51.84-00:52.80][S02] 哪次不是背着我们",
+        "[00:52.80-00:53.92][S02] 尽干一些缺德事",
+        "[01:00.16-01:00.96][S01] 顾云",
+        "[01:02.88-01:04.48][S01] 你知道魏海有女朋友的事",
+        "[01:05.12-01:05.92][S03] 知道",
+        "[01:06.24-01:07.68][S01] 那你怎么不早告诉我",
+        "[01:08.32-01:10.40][S01] 搞得我现在里外不是让你高兴了",
+        "[01:10.72-01:11.84][S03] 你讲不讲理",
+        "[01:12.32-01:13.44][S03] 你自己偷偷约魏海",
+        "[01:13.76-01:15.20][S03] 这事你有和我说过吗",
+        "[01:15.36-01:16.48][S04] 顾莉你别生气",
+        "[01:17.28-01:18.24][S04] 这件事情",
+        "[01:18.24-01:20.00][S04] 跟顾云确实没有什么关系",
+        "[01:20.32-01:21.92][S01] 那跟你简溪有什么关系",
+        "[01:23.84-01:25.92][S01] 我看你还是先管好自己的破事吧",
+        "[01:26.40-01:27.68][S01] 自己的屁股还没擦干净",
+        "[01:27.68-01:29.44][S01] 你就别急着帮别人提裤子",
+        "[01:29.44-01:31.20][S04] 什么叫我自己的屁股",
+        "[01:34.72-01:36.32][S04] 你把我的事情告诉顾莉了"
+      ],
+      video5: [
+        "[00:00.00-00:03.36][S01] 全民制作人们大家好",
+        "[00:03.36-00:04.96][S01] 我是练习时长两年半的",
+        "[00:04.96-00:06.40][S01] 个人练习生蔡徐坤",
+        "[00:06.40-00:09.44][S01] 喜欢唱跳rap、篮球、music",
+        "[00:43.04-00:44.64][S01] 今天就来这里让我如此沉醉",
+        "[00:44.64-00:45.60][S01] 你中就是感觉",
+        "[00:45.60-00:46.08][S01] 我从没有",
+        "[00:46.08-00:47.52][S01] 可是GOT CRUSH ON YOU",
+        "[00:47.52-00:48.48][S01] 酷不酷",
+        "[00:50.08-00:51.04][S01] 在今后的节目中",
+        "[00:51.04-00:52.64][S01] 我还准备了很多",
+        "[00:52.64-00:54.88][S01] 我自己作词作曲编舞的",
+        "[00:54.88-00:55.84][S01] 原创作品",
+        "[00:55.84-00:56.48][S01] 期待的话",
+        "[00:56.48-00:57.60][S01] 请多多为我投票吧"
+      ],
+      video6: [
+        "[00:01.26-00:01.66][S01] 大家好",
+        "[00:01.66-00:02.58][S01] 欢迎收看谭政交通",
+        "[00:02.58-00:03.66][S01] 前方那辆电瓶车",
+        "[00:03.66-00:04.78][S01] 拖了很长的货",
+        "[00:04.78-00:06.58][S01] 来到了这个快车道里面",
+        "[00:06.58-00:07.66][S01] 这个事可拖不得",
+        "[00:07.66-00:08.50][S01] 咱们得赶紧上去",
+        "[00:08.50-00:09.30][S01] 跟他说一说",
+        "[00:09.30-00:09.66][S01] 大家好",
+        "[00:09.66-00:11.46][S01] 这师傅现在终于拐进来了",
+        "[00:11.46-00:12.38][S01] 你好 师傅",
+        "[00:12.38-00:13.30][S02] 警官好",
+        "[00:13.30-00:14.38][S01] 你好",
+        "[00:14.38-00:15.82][S01] 来 咱们到边上聊一聊",
+        "[00:15.82-00:16.86][S01] 我问你",
+        "[00:16.86-00:18.18][S01] 你这该走哪",
+        "[00:18.18-00:19.10][S02] 到二仙桥",
+        "[00:19.10-00:19.74][S01] 什么到二仙桥 不",
+        "[00:20.94-00:22.74][S01] 我是说你该走哪根道",
+        "[00:22.74-00:23.94][S02] 走成华大道",
+        "[00:23.94-00:24.58][S01] 什么成华大道",
+        "[00:25.70-00:26.02][S01] 你这车子",
+        "[00:27.34-00:28.94][S01] 你车子能拉吗",
+        "[00:28.94-00:29.10][S02] 是能拉",
+        "[00:29.86-00:30.94][S02] 拉了点",
+        "[00:30.94-00:32.94][S02] 只拉一点点",
+        "[00:32.94-00:33.34][S01] 不 我是问能不能拉",
+        "[00:34.94-00:36.26][S02] 能 只能拉一点",
+        "[00:36.26-00:37.10][S02] 不能拉多的",
+        "[00:37.10-00:38.22][S02] 只拉一点点",
+        "[00:38.22-00:38.54][S01] 咱们不要乱了 师傅",
+        "[00:39.58-00:40.02][S01] 好吧",
+        "[00:40.02-00:42.02][S01] 咱们捋一下 好不好",
+        "[00:42.02-00:43.14][S01] 我是问你",
+        "[00:43.14-00:44.50][S01] 该走哪",
+        "[00:45.58-00:45.82][S02] 到二仙桥",
+        "[00:47.14-00:47.94][S01] 不是",
+        "[00:48.94-00:50.06][S01] 你走哪根道嘛",
+        "[00:50.06-00:50.70][S01] 你这个",
+        "[00:50.70-00:51.34][S02] 走成华大道",
+        "[00:53.14-00:54.02][S01] 就看你",
+        "[00:54.94-00:56.02][S01] 我被你搞糊涂了 师傅",
+        "[00:57.78-00:58.54][S01] 咱们",
+        "[00:58.54-00:58.70][S01] 你是要去二仙桥是吧",
+        "[01:00.54-01:01.34][S02] 对",
+        "[01:01.34-01:02.74][S01] 要走那个成华大道",
+        "[01:02.74-01:04.38][S01] 我不是说这个",
+        "[01:04.38-01:05.98][S01] 我是说你这个车子",
+        "[01:05.98-01:06.74][S01] 你这车子",
+        "[01:07.70-01:08.54][S01] 能不能走",
+        "[01:09.94-01:10.90][S02] 只能走",
+        "[01:11.78-01:12.10][S02] 能走",
+        "[01:12.98-01:13.30][S01] 能走",
+        "[01:14.18-01:14.82][S01] 能走哪嘛",
+        "[01:16.14-01:17.34][S02] 到二仙桥",
+        "[01:17.34-01:18.86][S01] 师傅 咱们这个不要乱",
+        "[01:18.86-01:19.22][S01] 好不好",
+        "[01:19.22-01:20.06][S01] 冷静一点 好吧",
+        "[01:20.06-01:21.78][S01] 我是说的你的这个车子",
+        "[01:21.78-01:22.10][S02] 电瓶车",
+        "[01:23.02-01:24.70][S01] 不 我知道是电瓶车",
+        "[01:24.70-01:25.86][S01] 电瓶车我认识",
+        "[01:25.86-01:26.74][S01] 就是说你这个车",
+        "[01:26.74-01:28.14][S01] 怎么这个样子拉货",
+        "[01:28.14-01:29.02][S01] 就是能这样拉吗",
+        "[01:30.70-01:31.46][S01] 你这个",
+        "[01:31.46-01:32.54][S01] 什么意思",
+        "[01:32.54-01:33.18][S02] 这个是",
+        "[01:33.18-01:35.54][S02] 他们喊我拉去",
+        "[01:35.54-01:36.54][S02] 他们要用",
+        "[01:36.54-01:37.54][S02] 救火的",
+        "[01:37.54-01:38.02][S01] 救火",
+        "[01:38.74-01:40.34][S01] 灭火的",
+        "[01:40.34-01:41.14][S02] 对 灭火的",
+        "[01:41.14-01:43.30][S01] 你拉的矿泉水吗",
+        "[01:43.30-01:44.06][S01] 你灭火",
+        "[01:44.06-01:45.62][S01] 你这楼梯还是什么",
+        "[01:45.62-01:47.06][S01] 你拉的是灭火的吗",
+        "[01:47.06-01:48.98][S02] 他们因为这样子",
+        "[01:48.98-01:50.14][S02] 拿这个货去放",
+        "[01:50.14-01:50.58][S02] 已经不燃了",
+        "[01:51.78-01:52.34][S02] 他们要用",
+        "[01:53.34-01:54.02][S01] 用你这个去救火",
+        "[01:55.94-01:56.34][S01] 师傅 你能清醒点吗",
+        "[01:59.50-01:59.82][S01] 这能救火吗",
+        "[02:00.98-02:01.34][S02] 这不能救火",
+        "[02:02.54-02:03.22][S01] 那不能救火",
+        "[02:03.22-02:04.22][S01] 你说是救火的",
+        "[02:04.22-02:06.22][S02] 它能防火",
+        "[02:06.22-02:07.54][S01] 这可以防火的",
+        "[02:07.54-02:08.02][S02] 对",
+        "[02:08.02-02:08.62][S01] 防火就是",
+        "[02:08.62-02:10.14][S01] 那纵火犯了 那就是",
+        "[02:10.14-02:11.54][S02] 燃起来燃不燃",
+        "[02:11.54-02:13.66][S02] 燃不起来",
+        "[02:13.66-02:15.74][S01] 你这个是防火的是吧",
+        "[02:15.74-02:16.66][S02] 对",
+        "[02:16.66-02:18.18][S01] 我以为你是放火的",
+        "[02:18.18-02:18.94][S01] 你这个",
+        "[02:18.94-02:20.34][S01] 跟你聊天这",
+        "[02:20.34-02:21.66][S01] 实在是有点",
+        "[02:21.66-02:22.38][S01] 有点费劲",
+        "[02:22.38-02:23.02][S01] 没事",
+        "[02:23.02-02:24.46][S01] 我们现在搞清楚了",
+        "[02:24.46-02:26.78][S01] 就是你这个是拿去防火的",
+        "[02:26.78-02:27.02][S01] 哪个地方要这个防火的",
+        "[02:29.54-02:30.38][S02] 那个消防总队",
+        "[02:31.94-02:33.34][S01] 消防总队",
+        "[02:33.34-02:33.50][S02] 消防队",
+        "[02:34.06-02:35.14][S01] 消防总队",
+        "[02:35.14-02:35.94][S02] 消防队",
+        "[02:35.94-02:37.46][S01] 消防队",
+        "[02:37.46-02:38.50][S01] 消防队就要你这一块去防火",
+        "[02:40.78-02:42.58][S02] 是 他们挨着的",
+        "[02:42.58-02:44.34][S01] 不 只要这一块吗",
+        "[02:44.34-02:44.74][S01] 什么意思",
+        "[02:44.74-02:45.98][S02] 对 只差这一点",
+        "[02:45.98-02:47.18][S01] 你怎么防火呢",
+        "[02:47.18-02:48.14][S02] 警官",
+        "[02:48.14-02:49.18][S01] 你好",
+        "[02:49.70-02:51.38][S01] 找了你很久都没找到你",
+        "[02:51.38-02:52.46][S01] 找我干吗",
+        "[02:52.46-02:53.62][S01] 今天看了下你了",
+        "[02:53.62-02:54.34][S01] 好 这个",
+        "[02:54.34-02:55.58][S02] 先给我照张相好不好",
+        "[02:55.58-02:57.14][S01] 注意交通安全 好不好",
+        "[02:57.14-02:57.94][S02] 很安全",
+        "[02:57.94-02:59.94][S01] 我们这个现在也讲究的是",
+        "[02:59.94-03:01.66][S01] 防火 防盗 防交通事故",
+        "[03:01.66-03:03.14][S01] 我每天回去没看成",
+        "[03:03.14-03:04.22][S01] 我都要回放的",
+        "[03:04.22-03:05.02][S01] 还要回放是吧",
+        "[03:05.02-03:05.58][S02] 真的",
+        "[03:05.58-03:06.58][S01] 这太好了",
+        "[03:06.58-03:08.10][S01] 把这个交通安全装在心里面",
+        "[03:08.10-03:09.18][S01] 大家伙",
+        "[03:09.18-03:09.94][S01] 平平安安的",
+        "[03:09.94-03:10.50][S02] 太激动了",
+        "[03:10.50-03:11.82][S01] 这就是我们这个",
+        "[03:11.82-03:13.06][S01] 成都交警的心愿",
+        "[03:13.06-03:13.54][S01] 好吧",
+        "[03:13.54-03:13.74][S02] 好",
+        "[03:13.74-03:14.38][S01] 注意安全",
+        "[03:14.38-03:14.74][S02] 好",
+        "[03:14.74-03:15.58][S01] 我这还有事呢",
+        "[03:15.58-03:16.74][S02] 好 你先忙",
+        "[03:16.74-03:17.50][S01] 好 再见",
+        "[03:17.50-03:18.38][S01] 谢谢",
+        "[03:18.38-03:18.54][S01] 现在咱们接着聊",
+        "[03:20.14-03:20.74][S01] 你看他们",
+        "[03:20.74-03:22.14][S01] 都挺关心的 对不对",
+        "[03:22.14-03:22.74][S02] 对",
+        "[03:22.74-03:23.78][S01] 听到他们说的了吗",
+        "[03:23.78-03:26.02][S02] 对 他找了你很久了 警官",
+        "[03:26.02-03:26.74][S01] 找我很久",
+        "[03:26.74-03:28.14][S01] 对 他为什么找我",
+        "[03:28.14-03:28.94][S01] 知道吧",
+        "[03:28.94-03:29.10][S02] 他关心",
+        "[03:30.50-03:32.14][S01] 他为什么",
+        "[03:32.14-03:32.46][S02] 又想上电视",
+        "[03:34.46-03:35.50][S01] 上电视",
+        "[03:35.50-03:35.90][S02] 放",
+        "[03:35.90-03:37.38][S01] 停",
+        "[03:37.38-03:38.14][S01] 师傅",
+        "[03:38.14-03:39.10][S01] 我有一个想法",
+        "[03:40.58-03:42.46][S01] 我觉得你今天是不是故意的",
+        "[03:42.46-03:44.58][S01] 你成心的跟我开心 是吧",
+        "[03:44.58-03:45.82][S01] 你逗我玩是吧",
+        "[03:45.82-03:46.82][S02] 不是 警官",
+        "[03:46.82-03:47.94][S02] 因为我",
+        "[03:47.94-03:49.10][S01] 我看你才是想上电视的",
+        "[03:51.18-03:51.94][S01] 是吧",
+        "[03:51.94-03:52.70][S01] 你这",
+        "[03:52.70-03:54.02][S01] 我问你该走哪根道",
+        "[03:54.02-03:55.34][S01] 你跟我说成华大道",
+        "[03:55.34-03:55.74][S01] 你这到底啥意思",
+        "[03:57.18-03:57.74][S02] 因为我只需要到二仙桥",
+        "[04:00.18-04:01.34][S02] 也不知道哪根道",
+        "[04:01.34-04:02.94][S01] 行了",
+        "[04:03.74-04:05.58][S01] 我已经被你完全搅糊涂了",
+        "[04:05.58-04:05.82][S01] 好吧",
+        "[04:05.82-04:07.62][S01] 咱们不谈这些了",
+        "[04:07.62-04:09.34][S01] 还是说你这个事",
+        "[04:09.34-04:10.34][S01] 你说的这个",
+        "[04:10.34-04:11.22][S01] 用来防火的 对不对",
+        "[04:12.66-04:13.38][S02] 对",
+        "[04:13.38-04:14.26][S01] 你说哪个就要你这一块",
+        "[04:15.90-04:17.06][S01] 就能防火",
+        "[04:17.06-04:18.90][S02] 因为它是差这一块了",
+        "[04:18.90-04:20.86][S02] 全部都拿去取了",
+        "[04:20.86-04:21.94][S02] 只差这一点点",
+        "[04:21.94-04:23.34][S01] 差一块",
+        "[04:23.34-04:24.58][S01] 你给他送过去",
+        "[04:24.58-04:25.14][S02] 对",
+        "[04:25.14-04:26.10][S01] 这怎么能防火呢",
+        "[04:26.10-04:27.02][S01] 你能教教我吗",
+        "[04:27.02-04:29.02][S02] 搭个棚子",
+        "[04:29.02-04:30.34][S02] 钢架搭起来",
+        "[04:30.34-04:31.14][S02] 铺在上面",
+        "[04:31.14-04:32.46][S02] 把混凝土一倒起",
+        "[04:32.46-04:33.46][S02] 就防火了",
+        "[04:33.46-04:34.02][S01] 就搭一棚子",
+        "[04:35.22-04:35.86][S01] 上面倒点混凝土",
+        "[04:37.58-04:38.82][S01] 这就能防火",
+        "[04:38.82-04:39.14][S02] 对",
+        "[04:39.14-04:40.90][S01] 你说哪个消防队这么不专业",
+        "[04:40.90-04:41.54][S01] 你告诉我",
+        "[04:41.54-04:42.22][S01] 我去找他",
+        "[04:42.22-04:43.54][S01] 没有这种的",
+        "[04:43.54-04:44.18][S02] 那",
+        "[04:44.18-04:45.30][S01] 是哪个消防队",
+        "[04:45.30-04:46.02][S01] 你告诉我",
+        "[04:46.02-04:48.58][S02] 二仙桥消防总队的隔壁",
+        "[04:48.58-04:48.82][S01] 什么",
+        "[04:49.34-04:51.58][S02] 隔壁 那个挨着的",
+        "[04:51.58-04:51.94][S02] 就隔壁",
+        "[04:52.50-04:54.38][S01] 隔壁也是消防队吗",
+        "[04:54.38-04:55.30][S02] 不是 那菜市",
+        "[04:55.30-04:56.78][S02] 那是菜市里面",
+        "[04:56.78-04:57.74][S02] 消防队就在菜市里面",
+        "[04:59.74-05:00.70][S01] 你到底是消防队还是菜市",
+        "[05:02.86-05:03.78][S02] 菜市",
+        "[05:03.78-05:05.34][S01] 那你给我说是消防队",
+        "[05:05.34-05:07.62][S02] 因为他说的在消防队对面",
+        "[05:07.62-05:09.06][S02] 他如果说消防队",
+        "[05:09.06-05:10.38][S02] 因为我走路经常",
+        "[05:10.38-05:12.14][S02] 那他才出来见过",
+        "[05:12.14-05:13.02][S01] 师傅 你说大喘气",
+        "[05:14.58-05:15.94][S01] 师傅 你确定",
+        "[05:15.94-05:18.02][S01] 你不是来故意逗我的吗",
+        "[05:18.02-05:18.70][S02] 我不是",
+        "[05:18.70-05:19.66][S02] 因为就这样子说了",
+        "[05:19.66-05:20.90][S02] 我老壳都晕了",
+        "[05:20.90-05:22.42][S01] 你还老壳晕了",
+        "[05:22.42-05:24.02][S01] 我都被你说晕了",
+        "[05:24.02-05:25.26][S01] 这样咱们捋一下 好吧",
+        "[05:25.26-05:25.94][S01] 我跟你说",
+        "[05:25.94-05:27.58][S01] 你千万不要晕",
+        "[05:27.58-05:28.26][S01] 首先你这个车子",
+        "[05:29.78-05:30.18][S01] 电瓶车没有错 是吧",
+        "[05:31.86-05:32.26][S01] 电瓶车",
+        "[05:32.90-05:34.62][S01] 你不管你要走哪个道",
+        "[05:34.62-05:35.42][S01] 你成华大道",
+        "[05:35.42-05:35.94][S01] 武侯大道",
+        "[05:35.94-05:37.58][S01] 什么大道你都可以走",
+        "[05:37.58-05:38.26][S01] 但是",
+        "[05:38.26-05:40.34][S01] 你不能走进机动车道里面",
+        "[05:40.34-05:42.14][S01] 你要走这个非机动车道",
+        "[05:42.14-05:43.70][S01] 还有一个你不能这样载货",
+        "[05:43.70-05:44.30][S01] 你看",
+        "[05:44.30-05:45.74][S01] 你这样违法牵引",
+        "[05:45.74-05:47.26][S01] 拉这么长很危险的",
+        "[05:47.26-05:47.74][S01] 明白了吗",
+        "[05:48.58-05:49.34][S02] 明白了",
+        "[05:49.34-05:50.50][S01] 就是不能这个样子",
+        "[05:50.50-05:50.94][S01] 好吧",
+        "[05:51.34-05:51.74][S02] 好",
+        "[05:51.74-05:53.50][S01] 你现在这个得转货",
+        "[05:53.50-05:53.74][S02] 好",
+        "[05:54.34-05:54.82][S01] 好吧",
+        "[05:54.82-05:55.58][S02] 好",
+        "[05:55.58-05:56.02][S01] 你真明白假明白",
+        "[05:57.70-05:58.46][S02] 明白了",
+        "[05:58.46-06:00.38][S02] 因为你跟我讲了这些交通事",
+        "[06:00.38-06:02.94][S02] 我都清楚了",
+        "[06:02.94-06:04.26][S01] 我怎么看你都觉得",
+        "[06:04.26-06:05.66][S01] 你是故意来上电视的",
+        "[06:05.66-06:06.34][S01] 我觉得",
+        "[06:06.34-06:07.42][S02] 我这吧",
+        "[06:07.42-06:08.38][S02] 你长得不好看",
+        "[06:08.38-06:09.26][S02] 我还什么",
+        "[06:09.26-06:10.94][S02] 想上电视 不想",
+        "[06:10.94-06:11.42][S02] 电视上看到我们都不好看了",
+        "[06:13.94-06:14.26][S01] 还不好看",
+        "[06:15.34-06:16.26][S02] 是",
+        "[06:16.26-06:17.22][S01] 我跟你讲",
+        "[06:17.22-06:19.30][S01] 每一个遵章守纪的人",
+        "[06:19.30-06:21.02][S01] 他都是美丽的好看的",
+        "[06:21.02-06:21.82][S01] 好不好",
+        "[06:21.82-06:22.06][S01] 好吧",
+        "[06:22.34-06:24.02][S01] 咱们赶紧把这货卸了 行吗",
+        "[06:24.02-06:24.62][S02] 行",
+        "[06:24.62-06:25.38][S01] 来吧"
+      ]
+    };
+
+    // 初始化滚动字幕
+    function initScrollSubtitles() {
+      const ITEM_HEIGHT = 44;     // 对应 CSS .subtitle-line 的 min-height
+      const CONTAINER_HEIGHT = 140; // 对应 CSS .subtitle-container 的 height
+      // 计算居中偏移量
+      const CENTER_OFFSET = (CONTAINER_HEIGHT - ITEM_HEIGHT) / 2;
+
+      document.querySelectorAll('video[data-video-id]').forEach(video => {
+        const videoId = video.getAttribute('data-video-id');
+        // 获取容器
+        const container = video.parentElement.querySelector('.subtitle-container');
+        if (!container) return;
+
+        // 1. 获取并解析数据
+        const rawSubtitles = subtitleData[videoId] || [];
+        const parsedSubtitles = rawSubtitles.map(parseSubtitleLine).filter(s => s !== null);
+        
+        // 2. 生成 DOM 列表结构
+        // 清空旧内容，建立滚动列表容器
+        container.innerHTML = `<div class="subtitle-list" id="list-${videoId}"></div>`;
+        const list = container.querySelector('.subtitle-list');
+
+        // 如果没有字幕，显示提示或留空
+        if (parsedSubtitles.length === 0) {
+          list.innerHTML = '<div class="subtitle-line">No subtitles available</div>';
+          return;
+        }
+
+        // 渲染所有字幕行
+        parsedSubtitles.forEach((sub, index) => {
+          const row = document.createElement('div');
+          row.className = 'subtitle-line';
+          // 将 speaker 和 text 分开渲染，去除 [] 符号
+          row.innerHTML = `
+            <span class="time">${sub.timeDisplay}</span>
+            <span class="speaker">${sub.speaker}</span>
+            <span class="text">${sub.text}</span>
+          `;
+          list.appendChild(row);
+        });
+
+        // 3. 监听播放事件更新滚动位置
+        video.addEventListener('timeupdate', () => {
+          const currentTime = video.currentTime;
+          
+          // 查找当前应该高亮的字幕索引
+          let activeIndex = -1;
+          
+          // 逻辑：找到当前时间所在的区间，或者最近的一个开始时间之前的字幕
+          for (let i = 0; i < parsedSubtitles.length; i++) {
+            const sub = parsedSubtitles[i];
+            // 如果时间在当前字幕范围内，或者已经过了开始时间但未到下一句
+            if (currentTime >= sub.start) {
+              activeIndex = i;
+            } else {
+              // 因为字幕是按时间排序的，一旦遇到还没开始的，后面的更不用看了
+              break;
+            }
+          }
+
+          // 更新视觉效果
+          updateListVisuals(list, activeIndex);
+        });
+      });
+
+      // 辅助函数：更新高亮和滚动位置
+      function updateListVisuals(list, activeIndex) {
+        const rows = list.children;
+        
+        // 1. 更新高亮类名
+        for (let i = 0; i < rows.length; i++) {
+          if (i === activeIndex) {
+            rows[i].classList.add('active');
+          } else {
+            rows[i].classList.remove('active');
+          }
+        }
+
+        // 2. 计算滚动偏移 translateY (支持不定高度)
+        let translateY = 0;
+        const CONTAINER_HEIGHT = 140; // 容器高度
+        
+        if (activeIndex !== -1 && rows[activeIndex]) {
+            const activeRow = rows[activeIndex];
+            // 计算目标元素的中心点相对于列表顶部的距离
+            // offsetTop 是元素顶部距离 offsetParent (即 .subtitle-list) 的距离
+            const elementCenter = activeRow.offsetTop + (activeRow.offsetHeight / 2);
+            // 容器中心点
+            const containerCenter = CONTAINER_HEIGHT / 2;
+            // 目标偏移量 = 容器中心 - 元素中心
+            translateY = containerCenter - elementCenter;
+        } else {
+            // 如果还没开始播放，显示第一行在中间
+            if (rows.length > 0) {
+                const firstRow = rows[0];
+                translateY = (CONTAINER_HEIGHT - firstRow.offsetHeight) / 2;
+            }
+        }
+
+        list.style.transform = `translateY(${translateY}px)`;
+      }
+    }
+
+    // 执行初始化
+    initScrollSubtitles();
+  </script>
+</body>
+</html>
+
